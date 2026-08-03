@@ -1,6 +1,6 @@
 // Core Module
 const path = require('path');
-
+require('dotenv').config();
 // External Module
 const express = require('express');
 const session = require('express-session');
@@ -8,7 +8,7 @@ const { default: mongoose } = require('mongoose');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const multer=require('multer');
 
-const DB_PATH = "mongodb+srv://root:root123@completecoding.dlhqijb.mongodb.net/airbnb?retryWrites=true&w=majority&appName=CompleteCoding";
+const DB_PATH = process.env.DB_PATH;
 
 //Local Module
 const storeRouter = require("./routes/storeRouter")
@@ -83,7 +83,7 @@ app.use("/host", hostRouter);
 
 app.use(errorsController.pageNotFound);
 
-const PORT = 3003;
+const PORT = process.env.PORT || 3003;
 
 mongoose.connect(DB_PATH).then(() => {
   console.log('Connected to Mongo');
