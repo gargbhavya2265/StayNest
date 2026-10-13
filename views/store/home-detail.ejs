@@ -9,7 +9,12 @@
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div class="rounded-lg overflow-hidden">
-                 <img src="/images/house1.png" alt="<%= home.houseName %>" class="w-full h-96 object-cover">
+                 <img
+                    src="<%= home.photo && home.photo.startsWith('/') ? home.photo : '/' + home.photo %>"
+                    alt="<%= home.houseName %>"
+                    class="w-full h-96 object-cover"
+                    onerror="this.onerror=null; this.src='/images/house1.png';"
+                    />
               </div>
               
               <div class="space-y-6">
