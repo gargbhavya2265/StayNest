@@ -1,3 +1,4 @@
+
 const path = require("path");
 require("dotenv").config();
 
@@ -30,12 +31,17 @@ console.log("Cloudinary environment check:", {
   apiKey: Boolean(process.env.CLOUDINARY_API_KEY),
   apiSecret: Boolean(process.env.CLOUDINARY_API_SECRET),
 });
+
 app.set("view engine", "ejs");
 app.set("views", "views");
 
 const store = new MongoDBStore({
   uri: DB_PATH,
   collection: "sessions",
+});
+
+store.on("error", (err) => {
+  console.error("Session store error:", err);
 });
 
 const storage = new CloudinaryStorage({
@@ -48,13 +54,14 @@ const storage = new CloudinaryStorage({
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only image files are allowed."));
+    return cb(null, true);
   }
+
+  return cb(new Error("Only image files are allowed."));
 };
 
 app.use(express.urlencoded({ extended: true }));
+
 app.use(multer({ storage, fileFilter }).single("photo"));
 
 app.use(express.static(path.join(rootDir, "public")));
@@ -81,11 +88,19 @@ app.use("/host", (req, res, next) => {
   if (req.isLoggedIn) {
     return next();
   }
+
   return res.redirect("/login");
 });
 
+app.use("/host", (req, res, next) => {
+  console.log("HOST REQUEST:", req.method, req.originalUrl);
+  next();
+});
+
+app.use("/host", hostRouter);
+
 app.use((err, req, res, next) => {
-  console.error("🔥 STAYNEST ERROR:", err.stack || err);
+  console.error("STAYNEST ERROR:", err.stack || err);
 
   if (res.headersSent) {
     return next(err);
@@ -102,6 +117,7 @@ mongoose
   .connect(DB_PATH)
   .then(() => {
     console.log("Connected to Mongo");
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
