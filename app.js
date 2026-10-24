@@ -9,6 +9,15 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const cloudinary = require("cloudinary").v2;
 
 const DB_PATH = process.env.DB_PATH;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
+if (!DB_PATH) {
+  throw new Error("DB_PATH is missing from environment variables.");
+}
+
+if (!SESSION_SECRET) {
+  throw new Error("SESSION_SECRET is missing from environment variables.");
+}
 
 const storeRouter = require("./routes/storeRouter");
 const hostRouter = require("./routes/hostRouter");
@@ -49,12 +58,23 @@ app.use(express.json());
 app.use(express.static(path.join(rootDir, "public")));
 app.use("/uploads", express.static(path.join(rootDir, "uploads")));
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "change-this-session-secret",
+    name: "staynest.sid",
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
   })
 );
 
@@ -63,15 +83,22 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(authRouter);
+app.use((req, res, next) => {
+  console.log("INCOMING REQUEST:", req.method, req.originalUrl);
+  next();
+});
 app.use(storeRouter);
 
 app.use("/host", (req, res, next) => {
-  if (req.isLoggedIn) {
-    return next();
+  if (!req.session?.isLoggedIn || !req.session?.user) {
+    return res.redirect("/login");
   }
 
-  return res.redirect("/login");
+  if (req.session.user.userType !== "host") {
+    return res.status(403).send("Access denied. Host account required.");
+  }
+
+  next();
 });
 
 app.use("/host", (req, res, next) => {

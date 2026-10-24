@@ -45,12 +45,19 @@ storeRouter.post(
 
 storeRouter.get(
   "/homes/:homeId/reserve",
+  (req, res, next) => {
+    console.log("RESERVE ROUTE HIT:", req.method, req.originalUrl);
+    next();
+  },
   requireGuestLogin,
   storeController.getReserve
 );
-
 storeRouter.post(
   "/homes/:homeId/reserve",
+  (req, res, next) => {
+    console.log("RESERVE POST ROUTE HIT:", req.method, req.originalUrl);
+    next();
+  },
   requireGuestLogin,
   storeController.postCreateBooking
 );

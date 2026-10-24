@@ -1,68 +1,67 @@
 <%- include('../partials/head') %>
-  </head>
-  <body>
-      <%- include('../partials/nav') %>
-      <main class="container mx-auto bg-white shadow-lg rounded-lg p-8 mt-10 max-w-6xl">
-          <h2 class="text-3xl text-red-500 font-bold text-center mb-6">
-              Details of <%= home.houseName %>
-          </h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div class="rounded-lg overflow-hidden">
-                 <img
-                    src="<%= home.photo && home.photo.startsWith('/') ? home.photo : '/' + home.photo %>"
-                    alt="<%= home.houseName %>"
-                    class="w-full h-96 object-cover"
-                    onerror="this.onerror=null; this.src='/images/house1.png';"
-                    />
-              </div>
-              
-              <div class="space-y-6">
-                  <div class="border-b pb-4">
-                      <h3 class="text-2xl font-semibold mb-2">Description</h3>
-                      <p class="text-gray-600"><%= home.description %></p>
-                  </div>
+</head>
+<body>
+  <%- include('../partials/nav') %>
 
-                  <div class="border-b pb-4">
-                      <h3 class="text-2xl font-semibold mb-2">Location</h3>
-                      <p class="text-gray-600"><%= home.location %></p>
-                  </div>
-                  
-                  <div class="border-b pb-4">
-                      <h3 class="text-2xl font-semibold mb-2">Price</h3>
-                      <p class="text-green-600 text-xl font-bold">Rs<%= home.price %> / night</p>
-                  </div>
-                  
-                  <div class="border-b pb-4">
-                      <h3 class="text-2xl font-semibold mb-2">Rating</h3>
-                      <div class="flex items-center">
-                          <span class="text-yellow-400 text-xl">★</span>
-                          <span class="ml-2 text-lg"><%= home.rating %> / 5</span>
-                      </div>
-                  </div>
-                  <div class="mt-4">
-                    <% if (isLoggedIn && user && user.userType === 'guest') { %>
-                        <a
-                        href="/homes/<%= home._id %>/reserve"
-                        class="block w-full rounded-lg bg-red-500 px-6 py-3 text-center font-semibold text-white hover:bg-red-600"
-                        >
-                        Book This Home
-                        </a>
-                    <% } else if (!isLoggedIn) { %>
-                        <a
-                        href="/login"
-                        class="block w-full rounded-lg bg-red-500 px-6 py-3 text-center font-semibold text-white hover:bg-red-600"
-                        >
-                        Login to Book
-                        </a>
-                    <% } %>
+  <main class="container mx-auto mt-10 max-w-6xl rounded-lg bg-white p-8 shadow-lg">
+    <h2 class="mb-6 text-center text-3xl font-bold text-red-500">
+      Details of <%= home.houseName %>
+    </h2>
 
-                    <div class="mt-4">
-                        <%- include('../partials/favourite') %>
-                    </div>
-                    </div>
-              </div>
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div class="overflow-hidden rounded-lg">
+        <img
+          src="<%= home.photo && home.photo.startsWith('/') ? home.photo : '/' + home.photo %>"
+          alt="<%= home.houseName %>"
+          class="h-96 w-full object-cover"
+          onerror="this.onerror=null; this.src='/images/house1.png';"
+        />
+      </div>
+
+      <div class="space-y-6">
+        <div class="border-b pb-4">
+          <h3 class="mb-2 text-2xl font-semibold">Description</h3>
+          <p class="text-gray-600"><%= home.description %></p>
+        </div>
+
+        <div class="border-b pb-4">
+          <h3 class="mb-2 text-2xl font-semibold">Location</h3>
+          <p class="text-gray-600"><%= home.location %></p>
+        </div>
+
+        <div class="border-b pb-4">
+          <h3 class="mb-2 text-2xl font-semibold">Price</h3>
+          <p class="text-xl font-bold text-green-600">Rs<%= home.price %> / night</p>
+        </div>
+
+        <div class="border-b pb-4">
+          <h3 class="mb-2 text-2xl font-semibold">Rating</h3>
+          <div class="flex items-center">
+            <span class="text-xl text-yellow-400">★</span>
+            <span class="ml-2 text-lg"><%= home.rating %> / 5</span>
           </div>
-      </main>
-  </body>
+        </div>
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <% if (isLoggedIn && user && user.userType === 'guest') { %>
+            <a
+              href="/homes/<%= home._id %>/reserve"
+              class="flex min-h-12 w-full items-center justify-center rounded-lg bg-red-500 px-4 py-3 text-center text-sm font-medium text-white shadow transition duration-300 hover:bg-red-600"
+            >
+              Book This Home
+            </a>
+          <% } else if (!isLoggedIn) { %>
+            <a
+              href="/login"
+              class="flex min-h-12 w-full items-center justify-center rounded-lg bg-red-500 px-4 py-3 text-center text-sm font-medium text-white shadow transition duration-300 hover:bg-red-600"
+            >
+              Login to Book
+            </a>
+          <% } %>
+
+          <%- include('../partials/favourite') %>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
 </html>
