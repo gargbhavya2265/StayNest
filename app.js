@@ -1,4 +1,3 @@
-
 const path = require("path");
 require("dotenv").config();
 
@@ -85,7 +84,15 @@ app.use("/host", (req, res, next) => {
   return res.redirect("/login");
 });
 
-app.use("/host", hostRouter);
+app.use((err, req, res, next) => {
+  console.error("🔥 STAYNEST ERROR:", err.stack || err);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  res.status(500).send("Internal Server Error - check Render logs");
+});
 
 app.use(errorsController.pageNotFound);
 
