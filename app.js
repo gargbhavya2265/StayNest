@@ -26,6 +26,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+console.log("Cloudinary environment check:", {
+  cloudName: Boolean(process.env.CLOUDINARY_CLOUD_NAME),
+  apiKey: Boolean(process.env.CLOUDINARY_API_KEY),
+  apiSecret: Boolean(process.env.CLOUDINARY_API_SECRET),
+});
 app.set("view engine", "ejs");
 app.set("views", "views");
 
