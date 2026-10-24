@@ -40,9 +40,27 @@
                           <span class="ml-2 text-lg"><%= home.rating %> / 5</span>
                       </div>
                   </div>
-                  <div class="mt-2">
-                    <%- include('../partials/favourite') %>
-                  </div>
+                  <div class="mt-4">
+                    <% if (isLoggedIn && user && user.userType === 'guest') { %>
+                        <a
+                        href="/homes/<%= home._id %>/reserve"
+                        class="block w-full rounded-lg bg-red-500 px-6 py-3 text-center font-semibold text-white hover:bg-red-600"
+                        >
+                        Book This Home
+                        </a>
+                    <% } else if (!isLoggedIn) { %>
+                        <a
+                        href="/login"
+                        class="block w-full rounded-lg bg-red-500 px-6 py-3 text-center font-semibold text-white hover:bg-red-600"
+                        >
+                        Login to Book
+                        </a>
+                    <% } %>
+
+                    <div class="mt-4">
+                        <%- include('../partials/favourite') %>
+                    </div>
+                    </div>
               </div>
           </div>
       </main>

@@ -1,10 +1,97 @@
 <%- include('../partials/head') %>
-  </head>
-  <body>
-    <%- include('../partials/nav') %>
-    <main class="container mx-auto mt-20 text-center">
-      <h2 class="text-6xl font-bold text-red-500 mb-4">My Bookings</h2>
-      <p class="text-2xl text-gray-700 mb-8">Bookings will appear here</p>
-    </main>
-  </body>
+</head>
+<body class="bg-gray-50">
+  <%- include('../partials/nav') %>
+
+  <main class="container mx-auto max-w-5xl px-4 py-10">
+    <h1 class="mb-2 text-4xl font-bold text-gray-800">My Bookings</h1>
+    <p class="mb-8 text-gray-600">Manage your StayNest reservations.</p>
+
+    <% if (success) { %>
+      <div class="mb-6 rounded-lg bg-green-100 p-4 text-green-800">
+        Booking created successfully!
+      </div>
+    <% } %>
+
+    <% if (!bookings || bookings.length === 0) { %>
+      <div class="rounded-xl bg-white p-8 text-center shadow">
+        <h2 class="text-2xl font-semibold">No bookings yet</h2>
+        <p class="mt-2 text-gray-600">
+          Find a home and make your first reservation.
+        </p>
+        <a
+          href="/homes"
+          class="mt-5 inline-block rounded-lg bg-red-500 px-6 py-3 font-semibold text-white hover:bg-red-600"
+        >
+          Explore Homes
+        </a>
+      </div>
+    <% } else { %>
+      <div class="space-y-6">
+        <% bookings.forEach((booking) => { %>
+          <article class="rounded-xl bg-white p-5 shadow md:p-6">
+            <div class="flex flex-col gap-5 md:flex-row">
+              <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold text-gray-800">
+                  <%= booking.home ? booking.home.houseName : 'Home no longer available' %>
+                </h2>
+
+                <% if (booking.home) { %>
+                  <p class="mt-1 text-gray-600"><%= booking.home.location %></p>
+                <% } %>
+
+                <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <p>
+                    <span class="font-semibold">Check-in:</span>
+                    <%= booking.checkIn.toISOString().slice(0, 10) %>
+                  </p>
+                  <p>
+                    <span class="font-semibold">Check-out:</span>
+                    <%= booking.checkOut.toISOString().slice(0, 10) %>
+                  </p>
+                  <p>
+                    <span class="font-semibold">Guests:</span>
+                    <%= booking.guests %>
+                  </p>
+                  <p>
+                    <span class="font-semibold">Total:</span>
+                    ₹<%= booking.totalPrice %>
+                  </p>
+                </div>
+
+                <p class="mt-4">
+                  <span class="font-semibold">Status:</span>
+                  <% if (booking.status === 'cancelled') { %>
+                    <span class="font-semibold text-red-600">Cancelled</span>
+                  <% } else { %>
+                    <span class="font-semibold text-green-700">Confirmed</span>
+                  <% } %>
+                </p>
+
+                <% if (
+                  booking.status === 'confirmed' &&
+                  booking.checkIn.toISOString().slice(0, 10) > today
+                ) { %>
+                  <form
+                    action="/bookings/<%= booking._id %>/cancel"
+                    method="POST"
+                    class="mt-5"
+                    onsubmit="return confirm('Are you sure you want to cancel this booking?');"
+                  >
+                    <button
+                      type="submit"
+                      class="rounded-lg border border-red-500 px-5 py-2 font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Cancel Booking
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    <% } %>
+  </main>
+</body>
 </html>
