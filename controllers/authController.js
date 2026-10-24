@@ -114,52 +114,60 @@ exports.postSignup = [
 ]
 
 exports.postLogin = async (req, res, next) => {
-  const {email, password} = req.body;
-  const user = await User.findOne({ email }).lean();
-  if (!user) {
-    return res.status(422).render("auth/login", {
-      pageTitle: "Login",
-      currentPage: "login",
-      isLoggedIn: false,
-      errors: ["User does not exist"],
-      oldInput: {email},
-      user: {},
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = req.body.password;
+
+    if (typeof password !== "string" || !password) {
+      return res.status(422).render("auth/login", {
+        pageTitle: "Login",
+        currentPage: "login",
+        isLoggedIn: false,
+        errors: ["Invalid email or password."],
+        oldInput: { email },
+        user: {},
+      });
+    }
+
+    const user = await User.findOne({ email }).lean();
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(422).render("auth/login", {
+        pageTitle: "Login",
+        currentPage: "login",
+        isLoggedIn: false,
+        errors: ["Invalid email or password."],
+        oldInput: { email },
+        user: {},
+      });
+    }
+
+    if (!["_id", "firstName", "lastName", "email", "userType"].every(
+      (key) => user[key] !== undefined && user[key] !== null
+    )) {
+      return res.status(500).send("Unable to complete login.");
+    }
+
+    req.session.regenerate((err) => {
+      if (err) return next(err);
+
+      req.session.isLoggedIn = true;
+      req.session.user = {
+        _id: user._id.toString(),
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        userType: user.userType,
+      };
+
+      req.session.save((saveError) => {
+        if (saveError) return next(saveError);
+        res.redirect("/");
+      });
     });
+  } catch (err) {
+    next(err);
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(422).render("auth/login", {
-      pageTitle: "Login",
-      currentPage: "login",
-      isLoggedIn: false,
-      errors: ["Invalid Password"],
-      oldInput: {email},
-      user: {},
-    });
-  }
-
-  req.session.isLoggedIn = true;
-  req.session.user = {
-    _id: user._id.toString(),
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    userType: user.userType
-  };
-  await req.session.save();
-
-  req.session.save((err) => {
-  if (err) {
-    console.log("Session Save Error:", err);
-    return next(err);
-  }
-
-  console.log("Login Success");
-  console.log(req.session);
-
-  res.redirect("/");
-});
 };
 
 exports.postLogout = (req, res, next) => {
