@@ -4,11 +4,9 @@ require("dotenv").config();
 
 const express = require("express");
 const session = require("express-session");
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const MongoDBStore = require("connect-mongodb-session")(session);
-const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const DB_PATH = process.env.DB_PATH;
 
@@ -24,6 +22,7 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  debug: true,
 });
 
 console.log("Cloudinary environment check:", {
@@ -33,7 +32,7 @@ console.log("Cloudinary environment check:", {
 });
 
 app.set("view engine", "ejs");
-app.set("views", "views");
+app.set("views", path.join(rootDir, "views"));
 
 const store = new MongoDBStore({
   uri: DB_PATH,
@@ -44,23 +43,8 @@ store.on("error", (err) => {
   console.error("Session store error:", err);
 });
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "staynest",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    return cb(null, true);
-  }
-
-  return cb(new Error("Only image files are allowed."));
-};
-
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(express.static(path.join(rootDir, "public")));
 app.use("/uploads", express.static(path.join(rootDir, "uploads")));
@@ -97,19 +81,37 @@ app.use("/host", (req, res, next) => {
 
 app.use("/host", hostRouter);
 
+// Centralized error handler.
+// Multer/Cloudinary upload errors can happen before the controller runs.
 app.use((err, req, res, next) => {
-  console.error("STAYNEST ERROR:", err.stack || err);
+  console.error("========== STAYNEST ERROR ==========");
+  console.error("Request:", req.method, req.originalUrl);
+  console.error("Name:", err.name);
+  console.error("Message:", err.message);
+  console.error("HTTP code:", err.http_code);
+  console.error("Error details:", err.error);
+  console.error("Storage errors:", err.storageErrors);
+  console.error("Cause:", err.cause);
+  console.error("Stack:", err.stack);
+  console.error("====================================");
 
   if (res.headersSent) {
     return next(err);
   }
 
-  res.status(500).send("Internal Server Error - check Render logs");
+  return res.status(500).send(
+    "Request failed. Please check the server logs."
+  );
 });
 
 app.use(errorsController.pageNotFound);
 
 const PORT = process.env.PORT || 3003;
+
+if (!DB_PATH) {
+  console.error("DB_PATH is missing. Check your environment variables.");
+  process.exit(1);
+}
 
 mongoose
   .connect(DB_PATH)
@@ -122,4 +124,5 @@ mongoose
   })
   .catch((err) => {
     console.error("Error while connecting to Mongo:", err);
+    process.exit(1);
   });

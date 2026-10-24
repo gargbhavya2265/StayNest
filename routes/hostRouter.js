@@ -24,14 +24,35 @@ const fileFilter = (req, file, cb) => {
   return cb(new Error("Only image files are allowed."));
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
 
 hostRouter.get("/add-home", hostController.getAddHome);
-hostRouter.post("/add-home", upload.single("photo"), hostController.postAddHome);
+
+hostRouter.post(
+  "/add-home",
+  upload.single("photo"),
+  hostController.postAddHome
+);
 
 hostRouter.get("/host-home-list", hostController.getHostHomes);
+
 hostRouter.get("/edit-home/:homeId", hostController.getEditHome);
-hostRouter.post("/edit-home", upload.single("photo"), hostController.postEditHome);
-hostRouter.post("/delete-home/:homeId", hostController.postDeleteHome);
+
+hostRouter.post(
+  "/edit-home",
+  upload.single("photo"),
+  hostController.postEditHome
+);
+
+hostRouter.post(
+  "/delete-home/:homeId",
+  hostController.postDeleteHome
+);
 
 module.exports = hostRouter;
