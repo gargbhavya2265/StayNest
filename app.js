@@ -31,7 +31,7 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  debug: true,
+  debug: process.env.NODE_ENV !== "production",
 });
 
 console.log("Cloudinary environment check:", {
@@ -79,7 +79,7 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  req.isLoggedIn = req.session.isLoggedIn;
+  req.isLoggedIn = Boolean(req.session?.isLoggedIn);
   next();
 });
 
@@ -87,8 +87,14 @@ app.use((req, res, next) => {
   console.log("INCOMING REQUEST:", req.method, req.originalUrl);
   next();
 });
-app.use(storeRouter);
 
+// Authentication routes: login, signup and logout.
+app.use("/", authRouter);
+
+// Public website routes.
+app.use("/", storeRouter);
+
+// Protect host routes.
 app.use("/host", (req, res, next) => {
   if (!req.session?.isLoggedIn || !req.session?.user) {
     return res.redirect("/login");
@@ -109,7 +115,6 @@ app.use("/host", (req, res, next) => {
 app.use("/host", hostRouter);
 
 // Centralized error handler.
-// Multer/Cloudinary upload errors can happen before the controller runs.
 app.use((err, req, res, next) => {
   console.error("========== STAYNEST ERROR ==========");
   console.error("Request:", req.method, req.originalUrl);
@@ -131,21 +136,17 @@ app.use((err, req, res, next) => {
   );
 });
 
+// Handle unmatched routes.
 app.use(errorsController.pageNotFound);
 
 const PORT = process.env.PORT || 3003;
-
-if (!DB_PATH) {
-  console.error("DB_PATH is missing. Check your environment variables.");
-  process.exit(1);
-}
 
 mongoose
   .connect(DB_PATH)
   .then(() => {
     console.log("Connected to Mongo");
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
     });
   })
